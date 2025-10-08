@@ -1,0 +1,17 @@
+## NOTE: This file is preserved for tooling compatibility.
+## The authoritative dependency specification lives in pyproject.toml.
+## Regenerate (if needed) with: uv pip compile pyproject.toml -o requirements.txt
+fastapi==0.110.0
+uvicorn==0.29.0
+pydantic==2.6.4
+httpx==0.27.0
+pyyaml==6.0.1
+openapi-spec-validator==0.7.1
+pytest==8.0.0
+fastapi==0.110.0
+uvicorn==0.29.0
+pydantic==2.6.4
+httpx==0.27.0
+pytest==8.0.0
+pyyaml==6.0.1
+openapi-spec-validator==0.7.1
