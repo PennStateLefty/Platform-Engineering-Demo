@@ -68,13 +68,27 @@ def test_submit_provisioning_request_endpoint_contract():
         assert field in body, f"Missing field {field} in provisioning response"
 
 
-def test_get_provisioning_request_status_contract():
-    # This test assumes at least one request created; without implementation it will 404.
+def test_get_provisioning_request_status_contract_404_for_unknown():
     fake_id = "nonexistent-id"
     response = client.get(f"/provisioning-requests/{fake_id}")
-    # Expected eventual contract: 404 for unknown id OR 200 for existing.
-    # We assert 200 here to force red test until implemented properly (adjust later if needed).
-    assert response.status_code == 200, "Status retrieval endpoint not yet implemented (red test)."
+    assert response.status_code == 404
+
+
+def test_get_provisioning_request_status_contract_existing():
+    payload = {
+        "stackId": "basic-web-app",
+        "projectName": "Status Demo",
+        "environment": "dev",
+        "department": "Engineering",
+    }
+    submit = client.post("/provisioning-requests", json=payload)
+    assert submit.status_code == 202
+    pr_id = submit.json()["id"]
+    status_resp = client.get(f"/provisioning-requests/{pr_id}")
+    assert status_resp.status_code == 200
+    body = status_resp.json()
+    assert body["id"] == pr_id
+    assert body["stackId"] == "basic-web-app"
 
 
 def test_invalid_stack_rejected_contract():
@@ -85,5 +99,4 @@ def test_invalid_stack_rejected_contract():
         "department": "Engineering",
     }
     response = client.post("/provisioning-requests", json=payload)
-    # Expect 400 once implemented; assert 400 now to keep test red until logic added.
-    assert response.status_code == 400, "Invalid stack id should return 400 per contract once implemented."
+    assert response.status_code == 400
