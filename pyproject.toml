@@ -1,0 +1,49 @@
+[project]
+name = "platform-engineering-demo"
+version = "0.1.1"
+description = "Contract-first FastAPI service for Azure solution engineering demos"
+readme = "README.md"
+authors = [ { name = "Maintainers" } ]
+license = { text = "MIT" }
+requires-python = ">=3.11,<3.13"  # Temporarily exclude 3.13 until pydantic-core build issue resolved
+dependencies = [
+  # FastAPI stack
+  "fastapi==0.115.2",           # Supports newer pydantic; security + bug fixes
+  "uvicorn==0.30.6",
+  # Pydantic stack (explicit core pin optional but kept for reproducibility)
+  "pydantic==2.9.2",
+  "pydantic-core==2.23.4",
+  # HTTP + tooling
+  "httpx==0.27.2",
+  "pyyaml==6.0.2",
+  "openapi-spec-validator==0.7.1",
+  "typing-extensions>=4.12.2",   # ForwardRef evaluation fixes / future compat
+]
+
+[project.optional-dependencies]
+dev = [
+  # Retained for compatibility with tools that install extras via `.[dev]`.
+  # Primary dev dependency source is now [tool.uv].dev-dependencies.
+  "pytest==8.0.0",
+  "ruff==0.3.0"
+]
+
+[project.scripts]
+platform-demo = "app.main:create_app"
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+addopts = "-q"
+
+[tool.uv]
+# Ensures `uv sync --dev` installs these regardless of optional extras resolution.
+dev-dependencies = [
+  "pytest==8.0.0",
+  "ruff==0.3.0"
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"

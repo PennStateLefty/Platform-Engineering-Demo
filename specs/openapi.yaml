@@ -1,0 +1,217 @@
+openapi: 3.0.3
+info:
+  title: Platform Engineering Demo API
+  description: >-
+    Headless demo service showcasing contract-first Azure solution engineering.
+    This specification is the single source of truth; implementation MUST conform
+    and all changes originate here (Contract-First Principle).
+  version: 0.1.0
+  contact:
+    name: Demo Maintainers
+    url: https://github.com/PennStateLefty/Platform-Engineering-Demo
+servers:
+  - url: http://localhost:8000
+    description: Local development
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Liveness and basic readiness check.
+      tags: [system]
+      responses:
+        '200':
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                ok:
+                  value:
+                    status: ok
+                    service: platform-engineering-demo
+                    version: 0.1.0
+  /environment-stacks:
+    get:
+      operationId: listEnvironmentStacks
+      summary: List available environment stack blueprints
+      tags: [stacks]
+      security: []
+      responses:
+        '200':
+          description: List of environment stacks (may be empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentStack'
+  /provisioning-requests:
+    post:
+      operationId: submitProvisioningRequest
+      summary: Submit a new provisioning request (async simulated lifecycle)
+      tags: [provisioning]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stackId, projectName, environment, department]
+              properties:
+                stackId:
+                  type: string
+                  description: Identifier of environment stack to provision
+                projectName:
+                  type: string
+                  minLength: 3
+                  maxLength: 80
+                  description: Human readable project identifier
+                environment:
+                  type: string
+                  enum: [dev, qa, production]
+                  description: Target environment tier
+                department:
+                  type: string
+                  minLength: 2
+                  maxLength: 60
+                  description: Owning organization unit
+                mode:
+                  type: string
+                  description: Optional deterministic outcome override
+                  enum: [force_success, force_failure]
+      responses:
+        '202':
+          description: Provisioning request accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProvisioningRequest'
+        '400':
+          description: Invalid stack id or payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many active provisioning requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /provisioning-requests/{requestId}:
+    get:
+      operationId: getProvisioningRequestStatus
+      summary: Retrieve the current status of a provisioning request
+      tags: [provisioning]
+      security: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current provisioning request status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProvisioningRequest'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, service, version]
+      properties:
+        status:
+            type: string
+            enum: [ok]
+        service:
+            type: string
+        version:
+            type: string
+    EnvironmentStack:
+      type: object
+      required: [id, name, description, category, estimatedProvisionMinutes]
+      properties:
+        id:
+          type: string
+          pattern: '^[a-z0-9-]{3,40}$'
+        name:
+          type: string
+          minLength: 3
+          maxLength: 60
+        description:
+          type: string
+        category:
+          type: string
+        estimatedProvisionMinutes:
+          type: integer
+          minimum: 1
+          maximum: 120
+    ProvisioningRequest:
+      type: object
+      required: [id, stackId, projectName, environment, department, status, createdTimestamp, updatedTimestamp]
+      properties:
+        id:
+          type: string
+        stackId:
+          type: string
+        projectName:
+          type: string
+          minLength: 3
+          maxLength: 80
+        environment:
+          type: string
+          enum: [dev, qa, production]
+        department:
+          type: string
+          minLength: 2
+          maxLength: 60
+        status:
+          type: string
+          enum: [PENDING, IN_PROGRESS, SUCCEEDED, FAILED]
+        createdTimestamp:
+          type: string
+          format: date-time
+        updatedTimestamp:
+          type: string
+          format: date-time
+        completedTimestamp:
+          type: string
+          format: date-time
+          nullable: true
+        failureReason:
+          type: string
+          nullable: true
+        forcedOutcome:
+          type: string
+          enum: [SUCCESS, FAILURE]
+          nullable: true
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
