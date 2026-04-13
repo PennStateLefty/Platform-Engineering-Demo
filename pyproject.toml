@@ -24,7 +24,7 @@ dependencies = [
 dev = [
   # Retained for compatibility with tools that install extras via `.[dev]`.
   # Primary dev dependency source is now [tool.uv].dev-dependencies.
-  "pytest==8.0.0",
+  "pytest==9.0.3",
   "ruff==0.3.0"
 ]
 
@@ -40,7 +40,7 @@ addopts = "-q"
 [tool.uv]
 # Ensures `uv sync --dev` installs these regardless of optional extras resolution.
 dev-dependencies = [
-  "pytest==8.0.0",
+  "pytest==9.0.3",
   "ruff==0.3.0"
 ]
 
